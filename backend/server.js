@@ -28,6 +28,32 @@ fastify.post('/api/generate', async (request) => {
   }
 });
 
+// Registro de Esforzador (FASE 1)
+fastify.post('/api/register', async (request) => {
+  const { fullName, localSociety, presbytery, synodalUnion } = request.body;
+  const uid = 'ID' + Date.now();
+  // Generar ID de registro aleatorio para el gafete
+  const registrationId = `REG-${Math.floor(1000 + Math.random() * 9000)}`;
+  const label = `CNCT-${Math.random().toString(36).toUpperCase().substring(2,8)}`;
+
+  try {
+    // Insertar en la tabla wristbands con los nuevos campos
+    // Se asume que la tabla ha sido actualizada para tener society, presbytery, union_synodal
+    // Si no, estos campos se podrían guardar en un campo JSON o en status concatenados.
+    // Dado que yo ya actualicé la tabla en el paso anterior, puedo usar las columnas directamente.
+
+    const res = await pool.query(
+      `INSERT INTO wristbands (uid, label, attendee_name, society, presbytery, union_synodal, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [uid, label, fullName, localSociety, presbytery, synodalUnion, registrationId]
+    );
+    return { success: true, data: res.rows[0] };
+  } catch (err) {
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+});
+
 // Lista de Asistentes
 fastify.get('/api/attendees', async () => {
   try {
